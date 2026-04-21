@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buổi 5 — HĐH Phân Bổ RAM Cho Ứng Dụng</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0f1a;
+  --s1: #111827;
+  --s2: #1a2235;
+  --s3: #243048;
+  --s4: #2e3d5c;
+  --blue: #60a5fa;
+  --blue-d: rgba(96,165,250,0.12);
+  --blue-b: rgba(96,165,250,0.3);
+  --green: #34d399;
+  --green-d: rgba(52,211,153,0.12);
+  --amber: #fbbf24;
+  --amber-d: rgba(251,191,36,0.12);
+  --red: #f87171;
+  --red-d: rgba(248,113,113,0.12);
+  --purple: #a78bfa;
+  --purple-d: rgba(167,139,250,0.12);
+  --teal: #2dd4bf;
+  --teal-d: rgba(45,212,191,0.12);
+  --text: #f0f4ff;
+  --text2: #8896b0;
+  --text3: #3d4f6e;
+  --body: 'Plus Jakarta Sans', sans-serif;
+  --display: 'Playfair Display', serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 3px; }
+
+/* grid bg */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(96,165,250,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 3rem 2rem;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 90% 70% at 50% 35%, rgba(96,165,250,0.13) 0%, rgba(45,212,191,0.05) 45%, transparent 70%);
+  pointer-events: none;
+}
+.hero-rings { position: absolute; inset: 0; pointer-events: none; }
+.ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(96,165,250,0.07);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  animation: rpulse 5s ease-in-out infinite;
+}
+.ring:nth-child(1) { width: 360px; height: 360px; }
+.ring:nth-child(2) { width: 600px; height: 600px; animation-delay: 1.5s; }
+.ring:nth-child(3) { width: 850px; height: 850px; animation-delay: 3s; }
+@keyframes rpulse { 0%,100%{opacity:.3} 50%{opacity:.9} }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--blue); border: 1px solid var(--blue-b);
+  background: var(--blue-d); padding: 6px 18px; border-radius: 3px;
+  display: inline-block; margin-bottom: 2rem;
+  animation: up .7s ease both;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 800; line-height: 1.05; letter-spacing: -.5px;
+  color: var(--text); margin-bottom: 1.25rem;
+  animation: up .7s .1s ease both;
+}
+.hero h1 em { font-style: normal; color: var(--blue); }
+.hero h1 .l2 { display: block; color: var(--teal); }
+.hero-sub {
+  font-size: 1rem; color: var(--text2); max-width: 500px;
+  font-weight: 300; margin: 0 auto 1.5rem; line-height: 1.8;
+  animation: up .7s .2s ease both;
+}
+.hero-meta {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: 1px; margin-bottom: 2.5rem;
+  animation: up .7s .25s ease both;
+}
+.hero-nav {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  animation: up .7s .3s ease both;
+}
+.hn {
+  font-family: var(--mono); font-size: 11px;
+  padding: 7px 15px; border: 1px solid var(--s3);
+  border-radius: 4px; background: var(--s1);
+  color: var(--text2); text-decoration: none;
+  transition: all .2s; letter-spacing: .5px;
+}
+.hn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-d); }
+.scroll-hint {
+  position: absolute; bottom: 2rem;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
+  animation: bob 2.5s ease infinite;
+}
+@keyframes up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
+
+/* ── NAV ── */
+.snav {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(11,15,26,.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--s3);
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  padding: 0 1.5rem;
+}
+.snav::-webkit-scrollbar { display: none; }
+.snav a {
+  font-family: var(--mono); font-size: 11px;
+  padding: 14px 15px; color: var(--text2);
+  text-decoration: none; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all .2s; letter-spacing: .5px; text-transform: uppercase;
+}
+.snav a:hover { color: var(--text); }
+.snav a.on { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* ── LAYOUT ── */
+.page { position: relative; z-index: 1; }
+.wrap { max-width: 1020px; margin: 0 auto; padding: 5rem 1.5rem; }
+.sep { height: 1px; background: linear-gradient(90deg, transparent, var(--s3), transparent); margin: 0 1.5rem; }
+
+/* ── CHAPTER HEADER ── */
+.ch-head { position: relative; margin-bottom: 3rem; }
+.ch-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--text3); text-transform: uppercase; margin-bottom: .6rem; }
+.ch-title { font-family: var(--display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.05; color: var(--text); margin-bottom: .75rem; }
+.ch-title .ac { color: var(--blue); }
+.ch-title .ag { color: var(--green); }
+.ch-title .aa { color: var(--amber); }
+.ch-title .ar { color: var(--red); }
+.ch-title .at { color: var(--teal); }
+.ch-title .ap { color: var(--purple); }
+.ch-desc { font-size: .95rem; color: var(--text2); max-width: 560px; font-weight: 300; line-height: 1.8; }
+.ch-num { position: absolute; right: 0; top: 0; font-family: var(--display); font-size: 7.5rem; color: var(--s2); line-height: 1; pointer-events: none; user-select: none; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--s1); border: 1px solid var(--s3);
+  border-radius: 10px; padding: 1.75rem;
+  margin-bottom: 1rem; transition: border-color .25s;
+  position: relative; overflow: hidden;
+}
+.card:hover { border-color: var(--s4); }
+.card::after { content: ''; position: absolute; inset: 0; top: auto; height: 1px; background: linear-gradient(90deg, var(--blue), var(--teal)); opacity: 0; transition: opacity .3s; }
+.card:hover::after { opacity: .3; }
+.card-bar { height: 2px; width: 50px; border-radius: 1px; background: var(--blue); margin-bottom: .9rem; }
+.card-bar.g { background: var(--green); }
+.card-bar.a { background: var(--amber); }
+.card-bar.r { background: var(--red); }
+.card-bar.t { background: var(--teal); }
+.card-bar.p { background: var(--purple); }
+.card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: .65rem; }
+.card p { font-size: .875rem; color: var(--text2); line-height: 1.8; margin-bottom: .55rem; }
+.card p:last-child { margin-bottom: 0; }
+
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1rem; margin-bottom: 1rem; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px,1fr)); gap: 1rem; margin-bottom: 1rem; }
+.g4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px,1fr)); gap: 1rem; margin-bottom: 1rem; }
+
+.kcard { background: var(--s2); border: 1px solid var(--s3); border-radius: 10px; padding: 1.35rem; transition: all .2s; }
+.kcard:hover { transform: translateY(-2px); border-color: var(--s4); }
+.kcard-ico { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; margin-bottom: .7rem; }
+.ki-b { background: var(--blue-d); }
+.ki-g { background: var(--green-d); }
+.ki-a { background: var(--amber-d); }
+.ki-r { background: var(--red-d); }
+.ki-p { background: var(--purple-d); }
+.ki-t { background: var(--teal-d); }
+.kcard h4 { font-size: .9rem; font-weight: 600; color: var(--text); margin-bottom: .35rem; }
+.kcard p { font-size: .82rem; color: var(--text2); line-height: 1.7; }
+.kcard .big { font-family: var(--mono); font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; display: block; }
+
+/* ── TAGS ── */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: .75rem; }
+.tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
+.tb { background: var(--blue-d); color: var(--blue); border: 1px solid var(--blue-b); }
+.tg { background: var(--green-d); color: var(--green); border: 1px solid rgba(52,211,153,.25); }
+.ta { background: var(--amber-d); color: var(--amber); border: 1px solid rgba(251,191,36,.25); }
+.tr { background: var(--red-d); color: var(--red); border: 1px solid rgba(248,113,113,.25); }
+.tt { background: var(--teal-d); color: var(--teal); border: 1px solid rgba(45,212,191,.25); }
+.tp { background: var(--purple-d); color: var(--purple); border: 1px solid rgba(167,139,250,.25); }
+
+/* ── ALERTS ── */
+.alert { display: flex; gap: 12px; padding: 1rem 1.2rem; border-radius: 8px; margin-bottom: 1rem; }
+.alert-ico { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+.alert h4 { font-size: .875rem; font-weight: 600; margin-bottom: .25rem; }
+.alert p { font-size: .83rem; line-height: 1.7; }
+.a-info { background: var(--blue-d); border: 1px solid var(--blue-b); }
+.a-info h4, .a-info .alert-ico { color: var(--blue); }
+.a-info p { color: #93c5fd; }
+.a-warn { background: var(--amber-d); border: 1px solid rgba(251,191,36,.28); }
+.a-warn h4, .a-warn .alert-ico { color: var(--amber); }
+.a-warn p { color: #fde68a; }
+.a-ok { background: var(--green-d); border: 1px solid rgba(52,211,153,.28); }
+.a-ok h4, .a-ok .alert-ico { color: var(--green); }
+.a-ok p { color: #6ee7b7; }
+.a-danger { background: var(--red-d); border: 1px solid rgba(248,113,113,.28); }
+.a-danger h4, .a-danger .alert-ico { color: var(--red); }
+.a-danger p { color: #fca5a5; }
+
+/* ── MEMORY MAP ── */
+.mem-map-wrap { background: var(--s2); border: 1px solid var(--s3); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.mem-map { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; margin-bottom: .75rem; }
+.mc { height: 20px; border-radius: 2px; border: 1px solid var(--s3); background: var(--s3); cursor: default; transition: transform .15s; }
+.mc:hover { transform: scale(1.2); z-index: 2; }
+.mc-os { background: var(--red-d); border-color: rgba(248,113,113,.35); }
+.mc-app { background: var(--blue-d); border-color: rgba(96,165,250,.35); }
+.mc-free { background: var(--green-d); border-color: rgba(52,211,153,.3); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text2); }
+.ml { display: flex; align-items: center; gap: 6px; }
+.ml-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── STEP LIST ── */
+.steps { display: grid; gap: .6rem; margin: .75rem 0; }
+.step { display: flex; gap: 14px; padding: .85rem 1.1rem; background: var(--s2); border-radius: 8px; border-left: 3px solid var(--blue); align-items: flex-start; transition: background .2s; }
+.step:hover { background: var(--s3); }
+.step.gs { border-left-color: var(--green); }
+.step.as { border-left-color: var(--amber); }
+.sn { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--blue); min-width: 20px; padding-top: 1px; flex-shrink: 0; }
+.step.gs .sn { color: var(--green); }
+.step.as .sn { color: var(--amber); }
+.sb { font-size: .875rem; color: var(--text2); line-height: 1.65; }
+.sb strong { color: var(--text); font-weight: 600; }
+.sb code { font-family: var(--mono); font-size: 12px; background: var(--s3); border: 1px solid var(--s4); padding: 1px 6px; border-radius: 3px; color: var(--teal); }
+
+/* ── RAM VISUALIZER ── */
+.ram-vis { background: var(--s2); border: 1px solid var(--s3); border-radius: 10px; padding: 1.4rem; margin-bottom: 1rem; }
+.rv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .85rem; flex-wrap: wrap; gap: 6px; }
+.rv-title { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); }
+.rv-stat { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.rv-bar { height: 36px; border-radius: 8px; overflow: hidden; display: flex; background: var(--s3); border: 1px solid var(--s4); margin-bottom: .75rem; }
+.rv-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; transition: width .4s ease; overflow: hidden; white-space: nowrap; padding: 0 6px; }
+.rs-os { background: rgba(248,113,113,.25); color: var(--red); border-right: 1px solid rgba(248,113,113,.3); }
+.rs-chrome { background: rgba(96,165,250,.2); color: var(--blue); border-right: 1px solid rgba(96,165,250,.3); }
+.rs-office { background: rgba(251,191,36,.2); color: var(--amber); border-right: 1px solid rgba(251,191,36,.3); }
+.rs-other { background: rgba(52,211,153,.2); color: var(--green); border-right: 1px solid rgba(52,211,153,.3); }
+.rs-free { background: var(--s3); color: var(--text3); font-style: italic; }
+.rv-legend { display: flex; flex-wrap: wrap; gap: 10px; }
+.rv-leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.rv-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── PROCESS TABLE ── */
+.ptbl { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.ptbl th { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); padding: .65rem 1rem; border-bottom: 1px solid var(--s3); text-align: left; background: var(--s2); white-space: nowrap; }
+.ptbl td { padding: .6rem 1rem; border-bottom: 1px solid var(--s2); color: var(--text2); vertical-align: middle; }
+.ptbl tr:hover td { background: var(--s2); }
+.ptbl td:first-child { color: var(--text); font-weight: 500; }
+.mb-wrap { background: var(--s3); border-radius: 2px; height: 6px; width: 90px; overflow: hidden; }
+.mb-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+
+/* ── SIMULATION BUTTONS ── */
+.sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media(max-width:520px){ .sim-grid{grid-template-columns:1fr} }
+.sim-panel { background: var(--s2); border: 1px solid var(--s3); border-radius: 8px; padding: 1rem; }
+.sim-panel-label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: .65rem; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.sbtn { font-family: var(--body); font-size: 13px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--s4); background: var(--s3); color: var(--text2); cursor: pointer; transition: all .15s; }
+.sbtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-d); }
+.sbtn.close-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-d); }
+.sbtn.reset-btn { border-color: var(--s4); color: var(--text3); }
+.sbtn.reset-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-d); }
+
+/* ── SIM ALERT ── */
+.sim-alert { border-radius: 8px; padding: .85rem 1rem; margin-bottom: 1rem; display: none; font-size: .875rem; }
+.sim-alert h4 { font-size: .875rem; font-weight: 600; margin-bottom: .2rem; }
+
+/* ── TAB SIMULATOR ── */
+.tab-sim-wrap { background: var(--s2); border: 1px solid var(--s3); border-radius: 10px; padding: 1.4rem; margin-bottom: 1rem; }
+.browser-frame { background: var(--s1); border: 1px solid var(--s3); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+.browser-chrome { background: var(--s2); padding: .5rem .9rem; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--s3); }
+.bc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--s4); }
+.browser-title { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-left: 8px; }
+.tab-strip { display: flex; flex-wrap: wrap; gap: 4px; padding: .55rem .9rem; border-bottom: 1px solid var(--s3); min-height: 36px; background: var(--s1); }
+.tab-pill { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; background: var(--blue-d); color: var(--blue); border: 1px solid var(--blue-b); animation: popIn .2s ease; }
+@keyframes popIn { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:scale(1)} }
+.browser-status { padding: .75rem .9rem; font-size: 12px; color: var(--text2); min-height: 38px; }
+
+.tab-ctrls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+.tab-ctrls .sbtn { font-size: 12px; padding: 6px 12px; }
+.tc-count { font-family: var(--mono); font-size: 12px; color: var(--text2); margin-left: auto; }
+
+.ram-meter { background: var(--s3); border-radius: 8px; padding: .85rem 1rem; }
+.rm-head { display: flex; justify-content: space-between; margin-bottom: .5rem; font-size: 12px; color: var(--text2); }
+.rm-head span:last-child { font-weight: 600; color: var(--text); font-family: var(--mono); }
+.rm-bar { height: 22px; border-radius: 4px; overflow: hidden; background: var(--s4); }
+.rm-fill { height: 100%; border-radius: 4px; transition: width .35s ease, background .35s; display: flex; align-items: center; padding: 0 8px; font-family: var(--mono); font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+.rm-scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: .35rem; }
+
+/* ── TASK MANAGER MOCKUP ── */
+.tm-mockup { background: #1a1f2e; border: 1px solid var(--s4); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; font-family: var(--mono); }
+.tm-header { background: #141824; border-bottom: 1px solid var(--s3); padding: .6rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+.tm-title { font-size: 12px; color: var(--text2); }
+.tm-tabs-row { display: flex; gap: 0; border-bottom: 1px solid var(--s3); padding: 0 1rem; }
+.tm-tab { font-size: 11px; padding: 8px 14px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; }
+.tm-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tm-body { padding: 1rem; }
+.tm-metric { background: var(--s2); border-radius: 6px; padding: .75rem 1rem; margin-bottom: .65rem; }
+.tm-metric-label { font-size: 10px; letter-spacing: 1px; color: var(--text3); text-transform: uppercase; margin-bottom: .35rem; }
+.tm-metric-val { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.tm-metric-sub { font-size: 11px; color: var(--text2); margin-top: .15rem; }
+.tm-bar { height: 8px; border-radius: 4px; background: var(--s4); overflow: hidden; margin-top: .5rem; }
+.tm-bar-fill { height: 100%; border-radius: 4px; }
+
+/* ── COMPARISON TABLE ── */
+.cmp-tbl { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.cmp-tbl th { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); padding: .65rem 1rem; border-bottom: 1px solid var(--s3); text-align: left; background: var(--s2); }
+.cmp-tbl td { padding: .6rem 1rem; border-bottom: 1px solid var(--s2); color: var(--text2); }
+.cmp-tbl tr:hover td { background: var(--s2); }
+.cmp-tbl td:first-child { color: var(--text); font-weight: 500; }
+.good { color: var(--green) !important; font-weight: 600; }
+.warn { color: var(--amber) !important; font-weight: 600; }
+.bad  { color: var(--red)   !important; font-weight: 600; }
+.info { color: var(--blue)  !important; font-weight: 600; }
+
+/* ── QUIZ ── */
+.qprog { display: flex; gap: 5px; margin-bottom: 1.25rem; }
+.qd { height: 3px; flex: 1; border-radius: 2px; background: var(--s3); transition: background .3s; }
+.qd.done { background: var(--green); }
+.qd.curr { background: var(--blue); }
+.qctr { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: .6rem; letter-spacing: 1px; text-transform: uppercase; }
+.qtext { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 1rem; line-height: 1.55; }
+.qopts { display: grid; gap: 8px; }
+.qo { background: var(--s2); border: 1px solid var(--s3); border-radius: 8px; padding: 12px 16px; font-size: .875rem; color: var(--text); cursor: pointer; text-align: left; font-family: var(--body); transition: all .15s; display: flex; gap: 12px; align-items: center; }
+.qo .ql { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 18px; flex-shrink: 0; }
+.qo:hover:not(:disabled) { border-color: var(--s4); background: var(--s3); }
+.qo.ok { background: var(--green-d); border-color: rgba(52,211,153,.4); color: var(--green); }
+.qo.ok .ql { color: var(--green); }
+.qo.no { background: var(--red-d); border-color: rgba(248,113,113,.4); color: var(--red); }
+.qo.no .ql { color: var(--red); }
+.qfb { margin-top: .9rem; padding: 1rem 1.2rem; border-radius: 8px; font-size: .875rem; line-height: 1.7; animation: up .25s ease; }
+.qfb.ok { background: var(--green-d); border: 1px solid rgba(52,211,153,.3); color: #6ee7b7; }
+.qfb.ok strong { color: var(--green); display: block; font-size: .95rem; margin-bottom: .3rem; }
+.qfb.no { background: var(--red-d); border: 1px solid rgba(248,113,113,.3); color: #fca5a5; }
+.qfb.no strong { color: var(--red); display: block; font-size: .95rem; margin-bottom: .3rem; }
+.qnext { margin-top: .75rem; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 9px 22px; border: 1px solid var(--blue-b); border-radius: 4px; background: transparent; color: var(--blue); cursor: pointer; text-transform: uppercase; transition: all .2s; }
+.qnext:hover { background: var(--blue-d); }
+.score-final { text-align: center; padding: 2.5rem; background: var(--s2); border: 1px solid var(--s3); border-radius: 10px; animation: up .4s ease; }
+.score-num { font-family: var(--display); font-size: 5rem; font-weight: 800; line-height: 1; margin-bottom: .5rem; }
+.score-final p { font-size: .95rem; color: var(--text2); margin-bottom: 1rem; }
+.score-final button { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 10px 28px; border: 1px solid var(--blue-b); border-radius: 4px; background: transparent; color: var(--blue); cursor: pointer; text-transform: uppercase; transition: all .2s; }
+.score-final button:hover { background: var(--blue-d); }
+
+/* ── REVEAL ── */
+.rv { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; }
+.rv.vi { opacity: 1; transform: none; }
+
+footer { position: relative; z-index: 1; text-align: center; padding: 2.5rem; border-top: 1px solid var(--s2); font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; }
+
+@media(max-width:600px){
+  .ch-num{display:none}
+  .hero h1{font-size:2.8rem}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .sim-grid{grid-template-columns:1fr}
+  .mem-map{grid-template-columns:repeat(8,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+
+  <div class="eyebrow">Buổi 5 · Nguyên Lý Hệ Điều Hành · TC Kinh tế – Kỹ thuật Cần Thơ</div>
+
+  <h1>HĐH Phân Bổ RAM<span class="l2">Cho Ứng Dụng</span></h1>
+
+  <p class="hero-sub">Hiểu cách hệ điều hành cấp phát, thu hồi bộ nhớ và bảo vệ từng vùng RAM — quan sát trực tiếp qua Task Manager.</p>
+
+  <div class="hero-meta">4 phần lý thuyết &nbsp;·&nbsp; 2 mô phỏng tương tác &nbsp;·&nbsp; Thực hành Task Manager &nbsp;·&nbsp; 5 câu quiz</div>
+
+  <div class="hero-nav">
+    <a href="#p1" class="hn">01 / RAM & OS quản lý</a>
+    <a href="#p2" class="hn">02 / Phân bổ & thu hồi</a>
+    <a href="#p3" class="hn">03 / Bảo vệ vùng nhớ</a>
+    <a href="#p4" class="hn">04 / Mô phỏng tương tác</a>
+    <a href="#p5" class="hn">05 / Thực hành Task Manager</a>
+    <a href="#p6" class="hn">06 / Quiz</a>
+  </div>
+
+  <div class="scroll-hint">↓ &nbsp; bắt đầu học</div>
+</section>
+
+<nav class="snav">
+  <a href="#p1" class="on">01 · RAM & OS</a>
+  <a href="#p2">02 · Phân bổ</a>
+  <a href="#p3">03 · Bảo vệ</a>
+  <a href="#p4">04 · Mô phỏng</a>
+  <a href="#p5">05 · Thực hành</a>
+  <a href="#p6">06 · Quiz</a>
+</nav>
+
+<div class="page">
+
+<!-- ══════ P1: RAM & OS ══════ -->
+<div class="sep"></div>
+<section id="p1">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">01</div>
+    <div class="ch-label">Phần 1 · Nền tảng</div>
+    <h2 class="ch-title">RAM và <span class="ac">HĐH</span> quản lý<br>như thế nào?</h2>
+    <p class="ch-desc">Hệ điều hành đóng vai trò "thủ kho" — phân phối từng MB RAM cho đúng ứng dụng, đúng thời điểm, và thu lại khi không cần nữa.</p>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar"></div>
+    <h3>Hình ảnh dễ nhớ — RAM như cái bàn học</h3>
+    <p>Hãy tưởng tượng RAM là một <strong>cái bàn học rộng</strong>. Bàn càng rộng thì bày được nhiều sách vở — tức là chạy nhiều ứng dụng cùng lúc mà không bị chậm.</p>
+    <p>Hệ điều hành (Windows, Linux, macOS) là <strong>"thủ kho"</strong> — quyết định ứng dụng nào được dùng bao nhiêu chỗ trên bàn, khi nào được lấy thêm, khi nào phải trả lại.</p>
+  </div>
+
+  <div class="g3 rv">
+    <div class="kcard">
+      <div class="kcard-ico ki-b">🧮</div>
+      <h4>RAM vật lý (Physical RAM)</h4>
+      <p>Chip RAM gắn thật trên bo mạch chủ — "bàn học thật". Tắt máy là mất hết toàn bộ dữ liệu.</p>
+      <div class="tags"><span class="tag tb">8–64 GB thông thường</span></div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-ico ki-p">🔮</div>
+      <h4>Bộ nhớ ảo (Virtual Memory)</h4>
+      <p>Khi RAM đầy, HĐH mượn thêm không gian trên SSD/HDD làm "bàn phụ" — chậm hơn nhưng không bị crash.</p>
+      <div class="tags"><span class="tag tp">pagefile.sys / swap</span></div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-ico ki-r">🔒</div>
+      <h4>Kernel Space</h4>
+      <p>Vùng RAM riêng mà HĐH giữ cho chính mình. App thông thường không được phép đọc hay ghi vào đây.</p>
+      <div class="tags"><span class="tag tr">Vùng bảo vệ cao nhất</span></div>
+    </div>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar t"></div>
+    <h3>Sơ đồ phân vùng RAM — HĐH chia RAM thành hai khu vực lớn</h3>
+    <div class="mem-map-wrap">
+      <div class="mem-map" id="memMap"></div>
+      <div class="map-legend">
+        <div class="ml"><div class="ml-dot" style="background:var(--red-d);border:1px solid rgba(248,113,113,.35)"></div>Kernel Space — HĐH chiếm, app không được vào</div>
+        <div class="ml"><div class="ml-dot" style="background:var(--blue-d);border:1px solid rgba(96,165,250,.35)"></div>User Space — nơi các ứng dụng đang chạy</div>
+        <div class="ml"><div class="ml-dot" style="background:var(--green-d);border:1px solid rgba(52,211,153,.3)"></div>Vùng còn trống — sẵn sàng cấp phát</div>
+      </div>
+    </div>
+    <p>Khi bạn mở Chrome, Word, Zalo… HĐH cấp phát từng ô trong vùng <strong>User Space</strong>. Khi đóng app, ô đó được trả về và sẵn sàng cho app tiếp theo.</p>
+  </div>
+
+  <div class="g2 rv">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-bar a"></div>
+      <h3>RAM vs Bộ nhớ ảo — so sánh</h3>
+      <div style="overflow-x:auto">
+      <table class="cmp-tbl">
+        <thead><tr><th></th><th>RAM vật lý</th><th>Virtual Memory</th></tr></thead>
+        <tbody>
+          <tr><td>Tốc độ</td><td class="good">Cực nhanh (nano giây)</td><td class="bad">Rất chậm (mili giây)</td></tr>
+          <tr><td>Dung lượng</td><td class="warn">4–64 GB</td><td class="good">Không giới hạn</td></tr>
+          <tr><td>Mất điện</td><td class="bad">Mất hết dữ liệu</td><td class="good">Giữ nguyên</td></tr>
+          <tr><td>Khi nào dùng</td><td>Luôn luôn ưu tiên</td><td class="info">Khi RAM đầy</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-bar g"></div>
+      <h3>Tại sao RAM quan trọng hơn ổ cứng?</h3>
+      <p>CPU đọc/ghi RAM ở tốc độ <strong>nano giây</strong> (tỷ phần của giây), trong khi đọc từ SSD mất <strong>mili giây</strong> — chậm hơn cả nghìn lần.</p>
+      <p>Đó là lý do khi RAM đầy và máy phải dùng Virtual Memory, mọi thứ bỗng trở nên ì ạch dù ổ SSD đã nhanh.</p>
+      <div class="alert a-info" style="margin-top:.75rem;margin-bottom:0">
+        <span class="alert-ico">💡</span>
+        <div><p>Nâng RAM từ 8 GB lên 16 GB thường cải thiện hiệu năng <strong>rõ rệt hơn</strong> nâng SSD từ SATA lên NVMe — nếu máy đang thiếu RAM.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════ P2: PHÂN BỔ & THU HỒI ══════ -->
+<div class="sep"></div>
+<section id="p2">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">02</div>
+    <div class="ch-label">Phần 2 · Cơ chế hoạt động</div>
+    <h2 class="ch-title">Phân bổ &amp;<br><span class="ag">thu hồi RAM</span></h2>
+    <p class="ch-desc">Mỗi lần bạn mở hoặc đóng một ứng dụng, HĐH thực hiện một loạt thao tác quản lý bộ nhớ phía sau hậu trường.</p>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar"></div>
+    <h3>Quy trình 5 bước khi bạn mở Chrome</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div class="sb">Bạn double-click vào Chrome → HĐH nạp file <code>chrome.exe</code> từ SSD vào RAM</div></div>
+      <div class="step"><div class="sn">2</div><div class="sb">Chrome gửi yêu cầu lên HĐH: <strong>"Cho tôi 200 MB để khởi động"</strong></div></div>
+      <div class="step"><div class="sn">3</div><div class="sb">HĐH kiểm tra RAM còn trống → <strong>cấp phát 200 MB</strong>, đánh dấu vùng đó là "đang dùng"</div></div>
+      <div class="step"><div class="sn">4</div><div class="sb">Bạn mở thêm tab YouTube → Chrome <strong>xin thêm</strong> ~150 MB → HĐH cấp tiếp</div></div>
+      <div class="step gs"><div class="sn">5</div><div class="sb">Bạn đóng Chrome → HĐH <strong>thu hồi toàn bộ</strong> vùng nhớ, đánh dấu lại là "trống" — sẵn sàng cho app khác</div></div>
+    </div>
+  </div>
+
+  <div class="g2 rv">
+    <div class="card" style="margin-bottom:0">
+      <div class="alert a-ok" style="margin-bottom:.75rem">
+        <span class="alert-ico">✓</span>
+        <div><h4>Thu hồi bình thường (Deallocate)</h4><p>App đóng gọn ghẽ → HĐH lấy lại RAM ngay. Đây là trường hợp lý tưởng, xảy ra với app được lập trình tốt.</p></div>
+      </div>
+      <p>Khi bạn tắt ứng dụng đúng cách (nhấn X hoặc File → Exit), app sẽ "dọn dẹp" vùng nhớ của mình trước khi thoát.</p>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="alert a-danger" style="margin-bottom:.75rem">
+        <span class="alert-ico">!</span>
+        <div><h4>Memory Leak — "Rò rỉ bộ nhớ"</h4><p>App dùng RAM nhưng <strong>không trả lại</strong> khi không cần nữa → RAM cứ đầy dần dù bạn không mở thêm app.</p></div>
+      </div>
+      <p>Triệu chứng điển hình: máy chạy ngày càng chậm theo giờ, phải <strong>restart máy</strong> mới hết. Thường do phần mềm viết kém hoặc có bug.</p>
+    </div>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar p"></div>
+    <h3>Hai kỹ thuật cấp phát RAM — Stack vs Heap</h3>
+    <div class="g2" style="margin-bottom:0">
+      <div class="kcard">
+        <div class="kcard-ico ki-t"><span style="font-family:var(--mono);font-size:1rem;color:var(--teal);font-weight:700">S</span></div>
+        <h4>Stack Memory — Tự động, cực nhanh</h4>
+        <p>Dùng cho biến cục bộ trong hàm (function). HĐH tự cấp khi vào hàm, tự giải phóng khi hàm kết thúc.</p>
+        <p>Ví dụ: biến <code style="font-family:var(--mono);background:var(--s3);padding:1px 5px;border-radius:3px;color:var(--teal)">x = 5</code> bên trong một hàm Python.</p>
+        <div class="tags"><span class="tag tt">Tự động giải phóng</span><span class="tag tg">Rất nhanh</span></div>
+      </div>
+      <div class="kcard">
+        <div class="kcard-ico ki-p"><span style="font-family:var(--mono);font-size:1rem;color:var(--purple);font-weight:700">H</span></div>
+        <h4>Heap Memory — Linh hoạt, lâu dài</h4>
+        <p>Dùng khi app cần lưu dữ liệu lâu dài hoặc kích thước thay đổi (list, object phức tạp).</p>
+        <p>Lập trình viên (hoặc Garbage Collector) phải tự giải phóng. Memory Leak xảy ra tại đây.</p>
+        <div class="tags"><span class="tag tp">Cần quản lý thủ công</span><span class="tag ta">Nguồn gốc Memory Leak</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════ P3: BẢO VỆ VÙNG NHỚ ══════ -->
+<div class="sep"></div>
+<section id="p3">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">03</div>
+    <div class="ch-label">Phần 3 · Bảo mật & Ổn định</div>
+    <h2 class="ch-title">Bảo vệ<br><span class="aa">vùng nhớ</span></h2>
+    <p class="ch-desc">Nếu các ứng dụng có thể tự do đọc/ghi RAM của nhau — hệ thống sẽ loạn ngay. Đây là lý do HĐH dựng tường ngăn cách giữa các app.</p>
+  </div>
+
+  <div class="g3 rv">
+    <div class="kcard">
+      <div class="kcard-ico ki-b">🏠</div>
+      <h4>Memory Isolation — Cô lập tiến trình</h4>
+      <p>Mỗi app chỉ thấy vùng nhớ của chính mình. App A không bao giờ đọc được RAM của App B.</p>
+      <div class="tags"><span class="tag tg">Ổn định hệ thống</span></div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-ico ki-r">🚫</div>
+      <h4>Segmentation Fault</h4>
+      <p>App cố truy cập vùng nhớ không được phép → HĐH lập tức dừng app đó. Windows hiện thông báo "App has stopped working".</p>
+      <div class="tags"><span class="tag tr">App bị kill ngay lập tức</span></div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-ico ki-a">🛡️</div>
+      <h4>Kernel Protection</h4>
+      <p>Vùng HĐH được bảo vệ ở cấp độ phần cứng (Ring 0). App thông thường chạy ở Ring 3, không thể chạm vào Kernel.</p>
+      <div class="tags"><span class="tag ta">Quyền Ring 0 vs Ring 3</span></div>
+    </div>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar a"></div>
+    <h3>Câu chuyện thực tế — Tại sao Windows 10 ổn định hơn Windows 98?</h3>
+    <p>Ngày xưa (Windows 95, 98), các app được phép truy cập RAM gần như thoải mái. Một app bị lỗi có thể <strong>kéo sập cả máy</strong> — màn hình xanh chết chóc (BSOD) xuất hiện liên tục.</p>
+    <p>Ngày nay (Windows 10/11), HĐH dùng <strong>Protected Mode</strong> và <strong>Virtual Memory</strong>: mỗi app sống trong "hộp cát" (sandbox) riêng. Crash trong đó → chỉ app đó chết, phần còn lại không bị ảnh hưởng.</p>
+    <div class="alert a-ok" style="margin-top:.75rem;margin-bottom:0">
+      <span class="alert-ico">💡</span>
+      <div><h4>Đó là lý do…</h4><p>Khi Chrome bị treo, bạn có thể đóng Chrome mà không cần restart máy. HĐH cô lập Chrome hoàn toàn với mọi thứ còn lại.</p></div>
+    </div>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar"></div>
+    <h3>Cơ chế Virtual Memory — "Bàn phụ khi bàn thật đầy"</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div class="sb">RAM vật lý gần đầy — ví dụ còn 300 MB trống trên máy 8 GB</div></div>
+      <div class="step"><div class="sn">2</div><div class="sb">HĐH tìm các vùng RAM <strong>ít được truy cập nhất</strong> — ví dụ app đang thu nhỏ xuống Taskbar</div></div>
+      <div class="step"><div class="sn">3</div><div class="sb">Chép nội dung đó ra file <strong>pagefile.sys</strong> trên ổ cứng — gọi là <strong>"swap out" / paging</strong></div></div>
+      <div class="step gs"><div class="sn">4</div><div class="sb">Vùng RAM vừa giải phóng → cấp cho app mới đang cần</div></div>
+      <div class="step gs"><div class="sn">5</div><div class="sb">Khi app cũ cần dùng lại → HĐH chép ngược từ ổ cứng vào RAM — gọi là <strong>"swap in"</strong></div></div>
+    </div>
+    <div class="alert a-warn" style="margin-top:.75rem;margin-bottom:0">
+      <span class="alert-ico">⚠</span>
+      <div><h4>Hạn chế của Virtual Memory</h4><p>Đọc/ghi ổ cứng <strong>chậm hơn RAM thật từ 100 đến 1000 lần</strong>. Khi máy liên tục swap (đèn ổ cứng sáng liên tục, âm thanh HDD kêu nhiều) — đây là dấu hiệu rõ ràng nhất cho thấy máy <strong>cần nâng cấp RAM</strong>.</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════ P4: MÔ PHỎNG ══════ -->
+<div class="sep"></div>
+<section id="p4">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">04</div>
+    <div class="ch-label">Phần 4 · Tương tác</div>
+    <h2 class="ch-title">Mô phỏng<br><span class="at">RAM thực tế</span></h2>
+    <p class="ch-desc">Nhấn các nút để mở/đóng ứng dụng và quan sát RAM thay đổi trực tiếp — giống hệt những gì Task Manager cho bạn thấy.</p>
+  </div>
+
+  <div class="card rv">
+    <div class="card-bar t"></div>
+    <h3>Trạng thái RAM — máy tính 8 GB</h3>
+
+    <div class="ram-vis">
+      <div class="rv-head">
+        <span class="rv-title">Thanh RAM trực quan</span>
+        <span class="rv-stat" id="rvStat">Đã dùng: 1.3 GB / 8 GB (16%)</span>
+      </div>
+      <div class="rv-bar" id="rvBar">
+        <div class="rv-seg rs-os" style="width:16%">HĐH</div>
+        <div class="rv-seg rs-chrome" id="rsChrome" style="width:0%"></div>
+        <div class="rv-seg rs-office" id="rsOffice" style="width:0%"></div>
+        <div class="rv-seg rs-other" id="rsOther" style="width:0%"></div>
+        <div class="rv-seg rs-free" id="rsFree" style="width:84%">Trống 6.7 GB</div>
+      </div>
+      <div class="rv-legend">
+        <div class="rv-leg"><div class="rv-dot" style="background:rgba(248,113,113,.3)"></div>Windows / HĐH (1.3 GB cố định)</div>
+        <div class="rv-leg"><div class="rv-dot" style="background:rgba(96,165,250,.3)"></div>Google Chrome</div>
+        <div class="rv-leg"><div class="rv-dot" style="background:rgba(251,191,36,.3)"></div>Word / Excel</div>
+        <div class="rv-leg"><div class="rv-dot" style="background:rgba(52,211,153,.3)"></div>App khác (Photoshop, Game…)</div>
+      </div>
+    </div>
+
+    <div class="sim-grid rv">
+      <div class="sim-panel">
+        <div class="sim-panel-label">Mở ứng dụng</div>
+        <div class="btn-row">
+          <button class="sbtn" onclick="openApp('c1')">+ Chrome (1 tab)</button>
+          <button class="sbtn" onclick="openApp('c5')">+ Chrome (5 tab)</button>
+          <button class="sbtn" onclick="openApp('c10')">+ Chrome (10 tab)</button>
+          <button class="sbtn" onclick="openApp('word')">+ Word / Excel</button>
+          <button class="sbtn" onclick="openApp('ps')">+ Photoshop</button>
+          <button class="sbtn" onclick="openApp('game')">+ Game nặng</button>
+        </div>
+      </div>
+      <div class="sim-panel">
+        <div class="sim-panel-label">Đóng ứng dụng</div>
+        <div class="btn-row">
+          <button class="sbtn close-btn" onclick="closeApp('chrome')">✕ Đóng Chrome</button>
+          <button class="sbtn close-btn" onclick="closeApp('office')">✕ Đóng Word/Excel</button>
+          <button class="sbtn close-btn" onclick="closeApp('other')">✕ Đóng app khác</button>
+          <button class="sbtn reset-btn" onclick="resetSim()">↺ Reset tất cả</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sim-alert" id="simAlert"></div>
+
+    <div style="overflow-x:auto">
+    <table class="ptbl">
+      <thead><tr><th>Tên ứng dụng</th><th>RAM đang dùng</th><th>Thanh tiến trình</th><th>Trạng thái</th></tr></thead>
+      <tbody id="procTbody">
+        <tr><td>Windows (HĐH)</td><td>1.3 GB</td><td><div class="mb-wrap"><div class="mb-fill" style="width:16%;background:var(--red)"></div></div></td><td><span class="tag tr">Luôn chạy</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════ P5: THỰC HÀNH ══════ -->
+<div class="sep"></div>
+<section id="p5">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">05</div>
+    <div class="ch-label">Phần 5 · Thực hành</div>
+    <h2 class="ch-title">Thực hành<br><span class="ap">Task Manager</span></h2>
+    <p class="ch-desc">Quan sát RAM thay đổi theo thời gian thực ngay trên máy tính đang dùng. Mô phỏng mở tab Chrome để xem hiệu ứng trực tiếp.</p>
+  </div>
+
+  <!-- Tab sim -->
+  <div class="card rv">
+    <div class="card-bar p"></div>
+    <h3>Mô phỏng — Mở tab Chrome và xem RAM tăng</h3>
+    <div class="tab-sim-wrap">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="bc-dot"></div><div class="bc-dot"></div><div class="bc-dot"></div>
+          <div class="browser-title">Google Chrome</div>
+        </div>
+        <div class="tab-strip" id="tabStrip"><div class="tab-pill">Trang chủ</div></div>
+        <div class="browser-status" id="bStatus">Máy chạy mượt — RAM Chrome đang ở mức thấp.</div>
+      </div>
+      <div class="tab-ctrls">
+        <button class="sbtn" onclick="addTab(1)">+ 1 tab</button>
+        <button class="sbtn" onclick="addTab(5)">+ 5 tab</button>
+        <button class="sbtn" onclick="addTab(10)">+ 10 tab</button>
+        <button class="sbtn close-btn" onclick="resetTabs()">✕ Đóng tất cả</button>
+        <span class="tc-count" id="tcCount">1 tab</span>
+      </div>
+      <div class="ram-meter">
+        <div class="rm-head">
+          <span>RAM Chrome đang chiếm (trên máy 8 GB)</span>
+          <span id="rmVal">150 MB</span>
+        </div>
+        <div class="rm-bar">
+          <div class="rm-fill" id="rmFill" style="width:1.8%;background:var(--green)">150 MB</div>
+        </div>
+        <div class="rm-scale"><span>0 MB</span><span>2 GB</span><span>4 GB</span><span>6 GB</span><span>8 GB</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Manager mockup -->
+  <div class="card rv">
+    <div class="card-bar"></div>
+    <h3>Giao diện Task Manager — tab Performance → Memory</h3>
+    <div class="tm-mockup">
+      <div class="tm-header">
+        <span class="tm-title">Task Manager</span>
+        <span style="font-size:11px;color:var(--text3)">Ctrl + Shift + Esc</span>
+      </div>
+      <div class="tm-tabs-row">
+        <div class="tm-tab">Processes</div>
+        <div class="tm-tab active">Performance</div>
+        <div class="tm-tab">App history</div>
+      </div>
+      <div class="tm-body">
+        <div class="g4" style="margin-bottom:.75rem">
+          <div class="tm-metric">
+            <div class="tm-metric-label">In Use (Compressed)</div>
+            <div class="tm-metric-val" id="tmInUse">3.2 GB</div>
+            <div class="tm-metric-sub">RAM đang được sử dụng</div>
+            <div class="tm-bar"><div class="tm-bar-fill" id="tmBar" style="width:40%;background:var(--blue)"></div></div>
+          </div>
+          <div class="tm-metric">
+            <div class="tm-metric-label">Available</div>
+            <div class="tm-metric-val" id="tmAvail">4.8 GB</div>
+            <div class="tm-metric-sub">Còn trống, sẵn sàng cấp</div>
+          </div>
+          <div class="tm-metric">
+            <div class="tm-metric-label">Committed</div>
+            <div class="tm-metric-val">5.1 / 16.8 GB</div>
+            <div class="tm-metric-sub">Đã hứa cấp (gồm virtual)</div>
+          </div>
+          <div class="tm-metric">
+            <div class="tm-metric-label">Speed</div>
+            <div class="tm-metric-val">3200 MHz</div>
+            <div class="tm-metric-sub">DDR4 — 2 khe cắm đang dùng</div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text3);font-family:var(--mono)">Tổng RAM: 8.0 GB · DDR4 · Slot: 2/4 đang dùng</p>
+      </div>
+    </div>
+    <p style="margin-top:.75rem;font-size:.875rem;color:var(--text2)">Giao diện trên là mô phỏng. Trên máy thật bạn sẽ thấy đồ thị cập nhật liên tục mỗi giây.</p>
+  </div>
+
+  <!-- Hướng dẫn thực hành -->
+  <div class="card rv">
+    <div class="card-bar g"></div>
+    <h3>Hướng dẫn từng bước — thực hành trên máy thật</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div class="sb">Nhấn <code>Ctrl + Shift + Esc</code> để mở <strong>Task Manager</strong></div></div>
+      <div class="step"><div class="sn">2</div><div class="sb">Nhấn tab <strong>Performance</strong> → chọn mục <strong>Memory</strong> ở cột trái</div></div>
+      <div class="step"><div class="sn">3</div><div class="sb">Ghi lại số <strong>"In Use"</strong> — đây là RAM đang được dùng lúc chưa mở Chrome. Ví dụ: 2.8 GB</div></div>
+      <div class="step"><div class="sn">4</div><div class="sb">Mở Chrome → mở lần lượt <strong>10 tab</strong>: Google, YouTube, Facebook, Zalo Web, tin tức…</div></div>
+      <div class="step"><div class="sn">5</div><div class="sb">Quay lại Task Manager → xem <strong>"In Use" đã tăng bao nhiêu</strong> so với bước 3</div></div>
+      <div class="step"><div class="sn">6</div><div class="sb">Đóng bớt 5 tab → quay lại Task Manager → quan sát RAM <strong>giảm xuống</strong></div></div>
+      <div class="step gs"><div class="sn">7</div><div class="sb">Sang tab <strong>Processes</strong> → tìm "Google Chrome" → cột <strong>Memory</strong> cho thấy Chrome đang chiếm bao nhiêu MB</div></div>
+    </div>
+    <div class="alert a-info" style="margin-top:.75rem;margin-bottom:0">
+      <span class="alert-ico">💡</span>
+      <div><h4>Điều cần quan sát & ghi nhớ</h4><p>Mỗi tab Chrome tốn khoảng <strong>100–300 MB RAM</strong> tùy nội dung. Mở 20 tab = có thể tốn 2–4 GB chỉ riêng Chrome. Đó là lý do Chrome nổi tiếng "ngốn RAM" — mỗi tab là một tiến trình riêng biệt!</p></div>
+    </div>
+  </div>
+
+  <!-- Chỉ số Task Manager -->
+  <div class="card rv">
+    <div class="card-bar a"></div>
+    <h3>Giải thích 4 chỉ số quan trọng trong Task Manager</h3>
+    <div class="g2" style="margin-bottom:0">
+      <div class="kcard">
+        <div class="kcard-ico ki-r">📊</div>
+        <h4>In Use — RAM đang dùng</h4>
+        <p>Tổng RAM mà tất cả app và HĐH đang thực sự chiếm. Nếu vượt <strong>85%</strong> → máy bắt đầu chậm do phải swap.</p>
+      </div>
+      <div class="kcard">
+        <div class="kcard-ico ki-g">✅</div>
+        <h4>Available — RAM còn trống</h4>
+        <p>RAM sẵn sàng cấp cho app mới. Dưới <strong>500 MB</strong> là nguy hiểm — HĐH đang tích cực dùng Virtual Memory.</p>
+      </div>
+      <div class="kcard">
+        <div class="kcard-ico ki-p">📦</div>
+        <h4>Committed — RAM đã hứa cấp</h4>
+        <p>Gồm cả Virtual Memory (pagefile). Nếu số này lớn hơn RAM vật lý → đang swap rất nhiều.</p>
+      </div>
+      <div class="kcard">
+        <div class="kcard-ico ki-t">💾</div>
+        <h4>Cached — RAM đang cache</h4>
+        <p>HĐH dùng RAM trống để cache file hay dùng → mở lần sau nhanh hơn. Đây là RAM "rảnh đang làm việc" — bình thường.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════ P6: QUIZ ══════ -->
+<div class="sep"></div>
+<section id="p6">
+<div class="wrap">
+  <div class="ch-head rv">
+    <div class="ch-num">06</div>
+    <div class="ch-label">Phần 6 · Kiểm tra</div>
+    <h2 class="ch-title">Quiz cuối<br><span class="ac">buổi 5</span></h2>
+    <p class="ch-desc">5 câu hỏi bao phủ toàn bộ nội dung: phân bổ RAM, thu hồi, bảo vệ vùng nhớ và thực hành Task Manager.</p>
+  </div>
+
+  <div class="card rv">
+    <div class="qprog" id="qprog"></div>
+    <div id="qarea"></div>
+  </div>
+</div>
+</section>
+
+</div>
+<footer>Buổi 5 · HĐH Phân Bổ RAM Cho Ứng Dụng · Nguyên Lý Hệ Điều Hành · TC Kinh tế – Kỹ thuật TP. Cần Thơ</footer>
+
+<script>
+/* ── REVEAL ── */
+const ro = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('vi'); }), { threshold: .08 });
+document.querySelectorAll('.rv').forEach(el => ro.observe(el));
+
+/* ── NAV ── */
+const navAs = document.querySelectorAll('.snav a');
+const sects = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sects.forEach(s => { if(window.scrollY >= s.offsetTop - 130) cur = s.id; });
+  navAs.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
+}, { passive: true });
+
+/* ── MEM MAP ── */
+(function(){
+  const g = document.getElementById('memMap');
+  if(!g) return;
+  const cells = [
+    'os','os','os','os','os','app','app','app','app','free','app','app','app','free','free','free',
+    'app','free','app','app','free','free','app','free','free','free','free','free','free','free','free','free'
+  ];
+  cells.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'mc ' + (t==='os'?'mc-os':t==='app'?'mc-app':'mc-free');
+    d.title = t==='os'?'Kernel Space (HĐH)':t==='app'?'User Space — App đang dùng':'Trống — sẵn sàng cấp phát';
+    g.appendChild(d);
+  });
+})();
+
+/* ── SIMULATION ── */
+const TOTAL = 8192, OS = 1300;
+let sim = { chrome: 0, office: 0, other: 0 };
+
+function updateSim() {
+  const used = OS + sim.chrome + sim.office + sim.other;
+  const pct = used / TOTAL * 100;
+  const cPct = sim.chrome / TOTAL * 100;
+  const oPct = sim.office / TOTAL * 100;
+  const xPct = sim.other  / TOTAL * 100;
+  const fPct = Math.max(0, 100 - 16 - cPct - oPct - xPct);
+  const freeMB = Math.round(TOTAL - used);
+
+  const rc = document.getElementById('rsChrome');
+  const ro2 = document.getElementById('rsOffice');
+  const rx = document.getElementById('rsOther');
+  const rf = document.getElementById('rsFree');
+
+  rc.style.width = cPct + '%'; rc.textContent = sim.chrome > 0 ? 'Chrome ' + (sim.chrome/1024).toFixed(1)+'GB' : '';
+  ro2.style.width = oPct + '%'; ro2.textContent = sim.office > 0 ? 'Office ' + sim.office+'MB' : '';
+  rx.style.width = xPct + '%'; rx.textContent = sim.other > 0 ? 'App ' + (sim.other/1024).toFixed(1)+'GB' : '';
+  rf.style.width = fPct + '%'; rf.textContent = freeMB > 800 ? 'Trống ' + Math.round(freeMB/1024*10)/10+'GB' : freeMB > 0 ? freeMB+'MB' : '';
+  document.getElementById('rvStat').textContent = 'Đã dùng: ' + Math.round(used/1024*10)/10 + ' GB / 8 GB (' + Math.round(pct) + '%)';
+
+  const alrt = document.getElementById('simAlert');
+  if(used > TOTAL * 0.92) {
+    alrt.style.display = 'block';
+    alrt.className = 'sim-alert a-danger';
+    alrt.innerHTML = '<h4>RAM gần đầy — máy đang swap!</h4><p>Chỉ còn ' + freeMB + ' MB trống. Windows đang dùng Virtual Memory (pagefile.sys) — máy sẽ rất chậm. Hãy đóng bớt ứng dụng ngay!</p>';
+  } else if(used > TOTAL * 0.75) {
+    alrt.style.display = 'block';
+    alrt.className = 'sim-alert a-warn';
+    alrt.innerHTML = '<h4>RAM đang ở mức cao (' + Math.round(pct) + '%)</h4><p>Nên đóng bớt tab Chrome hoặc ứng dụng không cần thiết để tránh máy chậm.</p>';
+  } else {
+    alrt.style.display = 'none';
+  }
+  updateProcTable();
+  updateTMockup(used, freeMB);
+}
+
+function updateTMockup(usedMB, freeMB) {
+  document.getElementById('tmInUse').textContent = Math.round(usedMB/1024*10)/10 + ' GB';
+  document.getElementById('tmAvail').textContent = Math.round(freeMB/1024*10)/10 + ' GB';
+  const pct = Math.round(usedMB/TOTAL*100);
+  document.getElementById('tmBar').style.width = pct + '%';
+  const col = pct < 60 ? 'var(--blue)' : pct < 80 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('tmBar').style.background = col;
+}
+
+function updateProcTable() {
+  const tbody = document.getElementById('procTbody');
+  let rows = '<tr><td>Windows (HĐH)</td><td>1.3 GB</td><td><div class="mb-wrap"><div class="mb-fill" style="width:16%;background:var(--red)"></div></div></td><td><span class="tag tr">Luôn chạy</span></td></tr>';
+  if(sim.chrome > 0) {
+    const p = Math.min(Math.round(sim.chrome/TOTAL*100*4), 100);
+    rows += `<tr><td>Google Chrome</td><td>${sim.chrome >= 1024 ? (sim.chrome/1024).toFixed(1)+' GB' : sim.chrome+' MB'}</td><td><div class="mb-wrap"><div class="mb-fill" style="width:${p}%;background:var(--blue)"></div></div></td><td><span class="tag tb">Đang chạy</span></td></tr>`;
+  }
+  if(sim.office > 0) {
+    const p = Math.min(Math.round(sim.office/TOTAL*100*6), 100);
+    rows += `<tr><td>Word / Excel</td><td>${sim.office} MB</td><td><div class="mb-wrap"><div class="mb-fill" style="width:${p}%;background:var(--amber)"></div></div></td><td><span class="tag ta">Đang chạy</span></td></tr>`;
+  }
+  if(sim.other > 0) {
+    const p = Math.min(Math.round(sim.other/TOTAL*100*3), 100);
+    rows += `<tr><td>App khác</td><td>${sim.other >= 1024 ? (sim.other/1024).toFixed(1)+' GB' : sim.other+' MB'}</td><td><div class="mb-wrap"><div class="mb-fill" style="width:${p}%;background:var(--green)"></div></div></td><td><span class="tag tg">Đang chạy</span></td></tr>`;
+  }
+  tbody.innerHTML = rows;
+}
+
+function openApp(type) {
+  if(type==='c1')   sim.chrome = Math.min(sim.chrome + 200, 5500);
+  else if(type==='c5')  sim.chrome = Math.min(sim.chrome + 750, 5500);
+  else if(type==='c10') sim.chrome = Math.min(sim.chrome + 1500, 5500);
+  else if(type==='word') sim.office = Math.min(sim.office + 300, 1500);
+  else if(type==='ps')   sim.other  = Math.min(sim.other + 900, 4000);
+  else if(type==='game') sim.other  = Math.min(sim.other + 2200, 4000);
+  updateSim();
+}
+function closeApp(type) {
+  if(type==='chrome') sim.chrome = 0;
+  else if(type==='office') sim.office = 0;
+  else if(type==='other') sim.other = 0;
+  updateSim();
+}
+function resetSim() { sim = {chrome:0, office:0, other:0}; updateSim(); }
+
+/* ── TAB SIMULATOR ── */
+let tabCount = 1;
+const TAB_MB = 150;
+function updateTabUI() {
+  const mb = tabCount * TAB_MB;
+  const pct = Math.min(mb / TOTAL * 100, 100);
+  const fill = document.getElementById('rmFill');
+  const valEl = document.getElementById('rmVal');
+  const txt = mb >= 1024 ? (mb/1024).toFixed(1)+' GB' : mb+' MB';
+  fill.style.width = Math.max(pct, 0.3) + '%';
+  fill.textContent = txt;
+  fill.style.background = pct < 25 ? 'var(--green)' : pct < 50 ? 'var(--amber)' : 'var(--red)';
+  valEl.textContent = txt;
+  document.getElementById('tcCount').textContent = tabCount + ' tab đang mở';
+  const msgs = [
+    'Máy chạy rất mượt — RAM Chrome thấp.',
+    'Chrome đang dùng khá nhiều RAM.',
+    'RAM cao! Nên đóng bớt tab không cần thiết.',
+    'RAM gần đầy — máy bắt đầu chậm lại.',
+    'CẢNH BÁO: RAM cực thấp — đang dùng Virtual Memory!'
+  ];
+  const i = pct < 15 ? 0 : pct < 30 ? 1 : pct < 50 ? 2 : pct < 70 ? 3 : 4;
+  document.getElementById('bStatus').textContent = msgs[i];
+}
+function addTab(n) {
+  for(let i = 0; i < n; i++) {
+    if(tabCount >= 60) return;
+    tabCount++;
+    const strip = document.getElementById('tabStrip');
+    const t = document.createElement('div');
+    t.className = 'tab-pill';
+    t.textContent = 'Tab ' + tabCount;
+    strip.appendChild(t);
+  }
+  updateTabUI();
+}
+function resetTabs() {
+  tabCount = 1;
+  document.getElementById('tabStrip').innerHTML = '<div class="tab-pill">Trang chủ</div>';
+  updateTabUI();
+}
+
+/* ── QUIZ ── */
+const Qs = [
+  {
+    q: 'HĐH đóng vai trò gì trong việc quản lý RAM?',
+    opts: ['Quyết định CPU xử lý bao nhanh','Phân bổ RAM cho từng ứng dụng và thu hồi khi không cần','Chỉ lưu dữ liệu vĩnh viễn trên ổ cứng','Kết nối máy tính với mạng Internet'],
+    ok: 1,
+    expl: 'Đúng! HĐH là "thủ kho RAM" — cấp phát khi app cần, thu hồi khi app đóng, và quyết định app nào được ưu tiên khi RAM khan hiếm.'
+  },
+  {
+    q: '"Memory Leak" (rò rỉ bộ nhớ) xảy ra khi nào?',
+    opts: ['RAM bị hỏng vật lý do điện áp bất ổn','App dùng RAM nhưng không trả lại khi không cần nữa','RAM quá nhanh làm CPU không theo kịp','Máy tính bị mất điện đột ngột'],
+    ok: 1,
+    expl: 'Đúng! Memory Leak xảy ra khi app "quên" không giải phóng RAM sau khi dùng xong. RAM cứ đầy dần → máy chậm dần theo giờ → restart mới hết.'
+  },
+  {
+    q: 'Khi RAM vật lý đầy, Windows làm gì để tránh crash?',
+    opts: ['Tắt máy ngay để bảo vệ dữ liệu','Tắt bớt ứng dụng đang chạy mà không hỏi','Dùng Virtual Memory — mượn không gian trên SSD/HDD','Tăng xung nhịp CPU để bù lại tốc độ'],
+    ok: 2,
+    expl: 'Đúng! Windows dùng file pagefile.sys trên ổ cứng như RAM phụ. Máy không crash nhưng chậm hơn vì ổ cứng chậm hơn RAM vật lý từ 100–1000 lần.'
+  },
+  {
+    q: 'Tại sao khi Chrome bị treo, bạn đóng Chrome mà không cần restart toàn bộ máy?',
+    opts: ['Vì CPU ngày nay đủ mạnh để tự khôi phục','Vì HĐH cô lập từng app trong vùng nhớ riêng — crash ở app này không lây sang app khác','Vì RAM DDR5 có tính năng tự sửa lỗi','Vì Chrome tự động lưu trạng thái vào ổ cứng'],
+    ok: 1,
+    expl: 'Đúng! Memory Isolation đảm bảo mỗi app sống trong "hộp cát" riêng. Đây là lý do HĐH hiện đại rất ổn định so với Windows 95/98 ngày xưa.'
+  },
+  {
+    q: 'Trong Task Manager, chỉ số nào cho biết máy đang cần nâng cấp RAM gấp?',
+    opts: ['CPU Usage đang ở 50%','Available Memory xuống dưới 300–500 MB và máy dùng nhiều pagefile','Disk Activity ở 10%','Network đang truyền dữ liệu 1 MB/s'],
+    ok: 1,
+    expl: 'Đúng! Khi Available Memory gần hết (dưới 300–500 MB) và Windows liên tục dùng pagefile.sys → máy sẽ rất chậm. Đây là dấu hiệu rõ ràng nhất cho thấy cần nâng cấp RAM.'
+  }
+];
+
+let qi = 0, score = 0, answered = false;
+const letters = ['A','B','C','D'];
+
+function drawProg() {
+  document.getElementById('qprog').innerHTML =
+    Qs.map((_,i) => `<div class="qd ${i<qi?'done':i===qi?'curr':''}"></div>`).join('');
+}
+function renderQ() {
+  answered = false;
+  drawProg();
+  const q = Qs[qi];
+  document.getElementById('qarea').innerHTML = `
+    <div class="qctr">Câu ${qi+1} / ${Qs.length} &nbsp;·&nbsp; Điểm: ${score}</div>
+    <div class="qtext">${q.q}</div>
+    <div class="qopts">${q.opts.map((o,i) => `<button class="qo" onclick="doAns(${i})"><span class="ql">${letters[i]}</span>${o}</button>`).join('')}</div>
+    <div id="qfb"></div>
+  `;
+}
+function doAns(i) {
+  if(answered) return;
+  answered = true;
+  const q = Qs[qi];
+  document.querySelectorAll('.qo').forEach((b,idx) => {
+    b.disabled = true;
+    if(idx === q.ok) b.classList.add('ok');
+    else if(idx === i && i !== q.ok) b.classList.add('no');
+  });
+  const ok = i === q.ok;
+  if(ok) score++;
+  const fb = document.getElementById('qfb');
+  if(qi < Qs.length - 1) {
+    fb.innerHTML = `<div class="qfb ${ok?'ok':'no'}"><strong>${ok?'✓ Chính xác!':'✗ Chưa đúng!'}</strong>${q.expl}</div><button class="qnext" onclick="qi++;renderQ()">Câu tiếp →</button>`;
+  } else {
+    const pct = Math.round(score/Qs.length*100);
+    const [msg, col] = pct===100?['Xuất sắc! Nắm vững hoàn toàn 🎯','var(--green)']:pct>=60?['Tốt! Ôn lại phần còn yếu nhé 💪','var(--blue)']:['Cần ôn tập thêm — thử lại! 📚','var(--amber)'];
+    fb.innerHTML = `
+      <div class="qfb ${ok?'ok':'no'}"><strong>${ok?'✓ Chính xác!':'✗ Chưa đúng!'}</strong>${q.expl}</div>
+      <div class="score-final" style="margin-top:.75rem">
+        <div class="score-num" style="color:${col}">${score}/${Qs.length}</div>
+        <p style="font-size:1.1rem;color:var(--text);font-weight:600;margin-bottom:.3rem">${pct}% chính xác</p>
+        <p>${msg}</p>
+        <button onclick="qi=0;score=0;renderQ()">↺ Làm lại từ đầu</button>
+      </div>
+    `;
+  }
+}
+
+renderQ();
+updateSim();
+</script>
+</body>
+</html>
